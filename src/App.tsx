@@ -1,7 +1,7 @@
 import Konva from "konva";
 import { Stage } from "konva/lib/Stage";
 import { FormEvent, ReactElement, useEffect, useRef, useState } from "react";
-import { downloadCanvas, loadImg as loadImgToCanvas } from "./utils";
+import { downloadURI, loadImg as loadImgToCanvas } from "./utils";
 import "./App.css";
 
 function App(): ReactElement {
@@ -15,7 +15,11 @@ function App(): ReactElement {
     img.src = imageData;
   }
 
-  function saveImage() {}
+  function saveImage() {
+    if (!stage) return;
+    const dataURL = stage.toDataURL({ pixelRatio: 3 });
+    downloadURI(dataURL, "stage.png");
+  }
 
   function renderLayers() {
     if (!stage) return;
@@ -27,8 +31,8 @@ function App(): ReactElement {
   useEffect(() => {
     stage = new Konva.Stage({
       container: "image-preview-container",
-      width: 1280,
-      height: 720,
+      width: 500,
+      height: 300,
     });
     stage.add(imageLayer);
     stage.add(sheetsLayer);
@@ -75,7 +79,7 @@ function App(): ReactElement {
 
   return (
     <div className="App">
-      <h1>Good cropping sheetlord!</h1>
+      <h2>Good cropping sheetlord!</h2>
       <div id="controller-container">
         <button onClick={saveImage}>Save image</button>
         <button onClick={renderLayers}>draw</button>
