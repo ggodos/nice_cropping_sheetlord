@@ -25,7 +25,7 @@ function App(): ReactElement {
     imageLayer.draw();
   }
 
-  useEffect(() => {
+  function stageInit() {
     stage = new Konva.Stage({
       container: "image-preview-container",
       width: 500,
@@ -36,7 +36,6 @@ function App(): ReactElement {
 
     img.onload = function () {
       console.log("img: ", img.width, img.height);
-      console.log("stage: ", stage.getSize());
       const loadedImg = new Konva.Image({
         x: 0,
         y: 0,
@@ -46,48 +45,75 @@ function App(): ReactElement {
       });
       stage.height(img.height);
       stage.width(img.width);
-      console.log("img: ", img.width, img.height);
-      console.log("stage: ", stage.getSize());
-      stage.clear();
+
+      sheetsLayer.add(
+        new Konva.Rect({
+          x: img.width / 2,
+          y: img.height / 2,
+          fill: "red",
+          stroke: "black",
+          width: 10,
+          height: 10,
+        })
+      );
       imageLayer.add(loadedImg);
-      imageLayer.draw();
+      stage.scale({ x: 1, y: 1 });
+      stage.position({ x: 0, y: 0 });
+      renderLayers();
     };
+
     renderLayers();
+
     const scaleBy = 1.05;
     stage.on("wheel", (e) => {
-      // stop default scrolling
       e.evt.preventDefault();
 
       var oldScale = stage.scaleX();
       var pointer = stage.getPointerPosition();
       if (!pointer) return;
 
-      var mousePointTo = {
-        x: (pointer.x - stage.x()) / oldScale,
-        y: (pointer.y - stage.y()) / oldScale,
-      };
+      // e.evt.deltaY is
+      // negative - zoom in
+      // positive - zoom out
+      const isZoomIn = e.evt.deltaY < 0;
 
-      // how to scale? Zoom in? Or zoom out?
-      let direction = e.evt.deltaY > 0 ? -1 : 1;
+      var newScale = isZoomIn ? oldScale * scaleBy : oldScale / scaleBy;
+      if (newScale > 10)
+        if (newScale < 1) {
+          stage.scale({ x: 1, y: 1 });
+          stage.position({ x: 0, y: 0 });
+          return;
+        }
 
-      // when we zoom on trackpad, e.evt.ctrlKey is true
-      // in that case lets revert direction
-      if (e.evt.ctrlKey) {
-        direction = -direction;
+      function scaleOffset(start: number, offset: number): number {
+        return ((offset - start) / oldScale) * newScale;
       }
 
-      var newScale = direction > 0 ? oldScale * scaleBy : oldScale / scaleBy;
-
-      stage.scale({ x: newScale, y: newScale });
-
-      var newPos = {
-        x: pointer.x - mousePointTo.x * newScale,
-        y: pointer.y - mousePointTo.y * newScale,
+      let newPos = {
+        x: pointer.x - scaleOffset(stage.x(), pointer.x),
+        y: pointer.y - scaleOffset(stage.y(), pointer.y),
       };
+
+      const scaledWidth = img.width / newScale;
+      const scaledHeight = img.height / newScale;
+
+      const stageRight = newPos.x / newScale - scaledWidth;
+      const stageBottom = newPos.y / newScale - scaledHeight;
+
+      const beyondRight = -img.width - stageRight;
+      const beyondBottom = -img.height - stageBottom;
+
+      if (beyondRight > 0) newPos.x = newPos.x + beyondRight * newScale;
+      if (beyondBottom > 0) newPos.y = newPos.y + beyondBottom * newScale;
+
+      if (newPos.x > 0) newPos.x = 0;
+      if (newPos.y > 0) newPos.y = 0;
       stage.position(newPos);
+      stage.scale({ x: newScale, y: newScale });
     });
-    // sheetsLayer.draw();
-  }, []);
+  }
+
+  useEffect(stageInit, []);
 
   function onInputFileChange(e: FormEvent<HTMLInputElement>) {
     const files = e.currentTarget.files;
@@ -106,12 +132,21 @@ function App(): ReactElement {
     };
   }
 
+  function teste() {
+    var x = stage.x();
+    console.log(x);
+    stage.x(x + 10);
+    x = stage.x();
+    console.log(x);
+    renderLayers();
+  }
+
   return (
     <div className="App">
       <h2>Good cropping sheetlord!</h2>
       <div id="controller-container">
         <button onClick={saveImage}>Save image</button>
-        <button onClick={renderLayers}>draw</button>
+        <button onClick={teste}>draw</button>
       </div>
       <input onChange={onInputFileChange} type="file" id="file_input"></input>
       <div id="image-preview-container"></div>
