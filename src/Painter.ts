@@ -110,13 +110,8 @@ export default class Painter {
     const beyondRight = -this.htmlImage.width - stageRight;
     const beyondBottom = -this.htmlImage.height - stageBottom;
 
-    // console.log(newScale, beyondRight, beyondBottom);
-    console.log(newScale);
-    console.log(newPos);
     if (beyondRight > 0) newPos.x = newPos.x + beyondRight * newScale;
     if (beyondBottom > 0) newPos.y = newPos.y + beyondBottom * newScale;
-    console.log(newPos);
-    console.log("------------------");
 
     if (newPos.x > 0) newPos.x = 0;
     if (newPos.y > 0) newPos.y = 0;
