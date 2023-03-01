@@ -2,12 +2,25 @@
   margin: 0 auto;
   padding: 2rem;
   text-align: center;
+}
+
+.App {
   display: flex;
   flex-direction: column;
 }
 
-#image-preview {
+#image-preview-container {
   border: 1px solid black;
+}
+
+.konvajs-content {
+  margin: 0;
+}
+
+#controller-container {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-around;
 }
 
 @media (prefers-reduced-motion: no-preference) {
